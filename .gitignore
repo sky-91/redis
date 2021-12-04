@@ -20,6 +20,7 @@ target/
 *.ipr
 *.log
 .mvn/
+mvnw.cmd
 /demo-test
 
 

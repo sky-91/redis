@@ -49,9 +49,7 @@ public class JedisResource {
 
     //构造很多用户
     List<String> users = new ArrayList<>();
-    IntStream.range(0, 10).parallel().forEach(b -> {
-      users.add("黄牛-" + b);
-    });
+    IntStream.range(0, 10).parallel().forEach(b -> users.add("黄牛-" + b));
 
     //初始化库存
     inventory = 2;
@@ -71,9 +69,6 @@ public class JedisResource {
 
   /**
    * 模拟抢单动作
-   *
-   * @param b
-   * @return
    */
   private String qiang(String b) {
     //用户开抢时间

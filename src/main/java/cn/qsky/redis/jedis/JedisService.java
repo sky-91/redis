@@ -2,6 +2,7 @@ package cn.qsky.redis.jedis;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.params.SetParams;
@@ -9,16 +10,23 @@ import redis.clients.jedis.params.SetParams;
 @Service
 public class JedisService {
 
+  @Value("${spring.redis.host}")
+  private String redisHost;
+
+  @Value("${spring.redis.port}")
+  private Integer redisPort;
+
   public boolean setnx(String key, String val) {
     Jedis jedis = null;
     try {
-      jedis = JedisPoolUtil.getJedisPoolInstance().getResource();
+      jedis = JedisPoolUtil.getJedisPoolInstance(redisHost, redisPort).getResource();
       if (jedis == null) {
         return false;
       }
       return jedis.set(key, val, new SetParams().nx().px(30000)).
           equalsIgnoreCase("ok");
     } catch (Exception ex) {
+//      ex.printStackTrace();
     } finally {
       if (jedis != null) {
         jedis.close();
@@ -30,7 +38,7 @@ public class JedisService {
   public int delnx(String key, String val) {
     Jedis jedis = null;
     try {
-      jedis = JedisPoolUtil.getJedisPoolInstance().getResource();
+      jedis = JedisPoolUtil.getJedisPoolInstance(redisHost, redisPort).getResource();
       if (jedis == null) {
         return 0;
       }
@@ -58,7 +66,7 @@ public class JedisService {
   public int lpush(String key, String val) {
     Jedis jedis = null;
     try {
-      jedis = JedisPoolUtil.getJedisPoolInstance().getResource();
+      jedis = JedisPoolUtil.getJedisPoolInstance(redisHost, redisPort).getResource();
       if (jedis == null) {
         return 0;
       }
@@ -76,7 +84,7 @@ public class JedisService {
     Jedis jedis = null;
     List<String> result = new ArrayList<>();
     try {
-      jedis = JedisPoolUtil.getJedisPoolInstance().getResource();
+      jedis = JedisPoolUtil.getJedisPoolInstance(redisHost, redisPort).getResource();
       if (jedis == null) {
         return result;
       }

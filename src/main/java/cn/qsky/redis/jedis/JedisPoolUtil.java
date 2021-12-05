@@ -6,12 +6,12 @@ import redis.clients.jedis.JedisPoolConfig;
 
 public class JedisPoolUtil {
 
-  private static volatile JedisPool jedisPool = null;
+  private static volatile JedisPool jedisPool;
 
   private JedisPoolUtil() {
   }
 
-  public static JedisPool getJedisPoolInstance() {
+  public static JedisPool getJedisPoolInstance(String host, Integer port) {
     if (null == jedisPool) {
       synchronized (JedisPoolUtil.class) {
         if (null == jedisPool) {//双端检索机制
@@ -20,7 +20,7 @@ public class JedisPoolUtil {
           poolConfig.setMaxIdle(32);
           poolConfig.setMaxWaitMillis(100 * 1000);
           poolConfig.setTestOnBorrow(true);
-          jedisPool = new JedisPool(poolConfig, "192.168.56.103", 30036);
+          jedisPool = new JedisPool(poolConfig, host, port);
         }
       }
     }

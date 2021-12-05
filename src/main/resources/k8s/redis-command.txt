@@ -1,0 +1,18 @@
+docker pull tomcat:9.0.55-jre8
+docker pull docker.io/registry
+docker run -d -p 5000:5000 --name=registry --restart=always --privileged=true  --log-driver=none -v /home/data/registrydata:/tmp/registry registry
+
+docker build -t redis-new .
+
+docker tag redis-new 192.168.56.101:5000/redis-new
+
+docker push 192.168.56.101:5000/redis-new
+
+vim /etc/docker/daemon.json
+{ "insecure-registries":["192.168.56.101:5000"] }
+systemctl daemon-reload
+systemctl restart docker
+
+kubectl create cm redis-war-config -n miaosha --from-file=application.properties
+
+kubectl apply -f redis-new.yaml

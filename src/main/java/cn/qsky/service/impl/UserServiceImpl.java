@@ -6,7 +6,7 @@ import cn.qsky.service.UserService;
 import javax.annotation.Resource;
 import org.springframework.stereotype.Service;
 
-@Service
+@Service(value = "userService")
 public class UserServiceImpl implements UserService {
 
   @Resource

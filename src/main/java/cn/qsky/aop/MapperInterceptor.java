@@ -48,7 +48,7 @@ public class MapperInterceptor implements Interceptor {
 //        invocation.getArgs()[1] = parameter;
 //    }
 
-    public Object enhanceDecryptBySelect(Object returnValue) {
+    private Object enhanceDecryptBySelect(Object returnValue) {
         if (returnValue != null) {
             if (returnValue instanceof ArrayList<?>) {
                 List<?> oriList = (ArrayList<?>) returnValue;
@@ -160,7 +160,7 @@ public class MapperInterceptor implements Interceptor {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> T realTarget(Object target) {
+    private static <T> T realTarget(Object target) {
         if (Proxy.isProxyClass(target.getClass())) {
             MetaObject metaObject = SystemMetaObject.forObject(target);
             return realTarget(metaObject.getValue("h.target"));

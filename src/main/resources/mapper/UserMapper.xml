@@ -11,7 +11,42 @@
   </resultMap>
 
   <select id="getUserByUid" resultMap="BaseResultMap">
-        select user.* from user where uid = #{uid}
-    </select>
+    select user.*
+    from user
+    where uid = #{uid}
+  </select>
 
+  <select id="getAll" resultMap="BaseResultMap">
+    select * from user
+    <where>
+      <if test="uid != null and uid != ''">uid = #{uid}</if>
+      <if test="userName != null and userName != ''">user_name = #{userName}</if>
+    </where>
+  </select>
+
+  <insert id="insertOne" parameterType="cn.qsky.entity.User">
+    insert into user(uid, user_name, age, register_time)
+    VALUES (#{uid}, #{user_name}, #{age}, #{register_time})
+  </insert>
+
+  <!--<insert id="insertBatch" parameterType="java.util.List">-->
+  <!--INSERT INTO user(uid, user_name, age, register_time)-->
+  <!--<foreach collection="list" item="item" index="index" open="(" close=")" separator="union all">-->
+  <!--SELECT #{item.name} as a, #{item.age} as b-->
+  <!--</foreach>-->
+  <!--</insert>-->
+
+  <insert id="insertBatch" parameterType="java.util.List">
+    INSERT INTO user(uid, user_name, age, register_time)
+    SELECT A.* FROM (
+    <foreach collection="list" item="items" index="index" separator="union">
+      SELECT
+      #{items.uid,jdbcType=VARCHAR},
+      #{items.user_name,jdbcType=VARCHAR},
+      #{items.age,jdbcType=INTEGER},
+      #{items.register_time,jdbcType=TIMESTAMP}
+      FROM TEMP
+    </foreach>
+    ) A
+  </insert>
 </mapper>

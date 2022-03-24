@@ -1,11 +1,16 @@
 package cn.qsky.entity;
 
+import cn.qsky.aop.DecryptField;
+import cn.qsky.aop.EnDecryptMapperType;
+
 import java.util.Date;
 
+@EnDecryptMapperType
 public class User {
 
   private String uid;
 
+  @DecryptField
   private String userName;
 
   private Integer age;

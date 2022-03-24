@@ -1,5 +1,7 @@
 package cn.qsky.aop;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlCommandType;
@@ -11,8 +13,11 @@ import org.apache.ibatis.session.RowBounds;
 import org.springframework.cglib.proxy.Proxy;
 import org.springframework.stereotype.Component;
 
-import java.lang.reflect.Field;
-import java.util.Date;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 @Intercepts({
@@ -26,24 +31,45 @@ public class MapperInterceptor implements Interceptor {
     @Override
     public Object intercept(Invocation invocation) throws Throwable {
         MappedStatement mappedStatement = (MappedStatement) invocation.getArgs()[0];
+        if (StringUtils.isEmpty(mappedStatement.getId()) || !mappedStatement.getId().contains("UserMapper")) return invocation.proceed();
+        System.out.println("Intercept method: " + mappedStatement.getId());
         //获取操作类型，crud
         SqlCommandType sqlCommandType = mappedStatement.getSqlCommandType();
-        if (SqlCommandType.SELECT.equals(sqlCommandType)) {
-            enhanceDecryptBySelect(invocation);
-        }
-        if (SqlCommandType.INSERT.equals(sqlCommandType) || SqlCommandType.UPDATE.equals(sqlCommandType)) {
+        if (SqlCommandType.SELECT.equals(sqlCommandType)) return enhanceDecryptBySelect(invocation.proceed());
+        if (SqlCommandType.INSERT.equals(sqlCommandType) || SqlCommandType.UPDATE.equals(sqlCommandType))
             enhanceEncryptByInsertOrUpdate(invocation);
-        }
         return invocation.proceed();
     }
 
-    private void enhanceDecryptBySelect(Invocation invocation) throws Throwable {
-        Object parameter = invocation.getArgs()[1];
-        if (parameter instanceof String) {
-            parameter = "10005";
+//    private void enhanceDecryptBySelect(Invocation invocation) throws Throwable {
+//        Object parameter = invocation.getArgs()[1];
+//        if (parameter instanceof Integer)
+//            parameter = 10001;
+//        invocation.getArgs()[1] = parameter;
+//    }
+
+    public Object enhanceDecryptBySelect(Object returnValue) {
+        if (returnValue != null) {
+            if (returnValue instanceof ArrayList<?>) {
+                List<?> oriList = (ArrayList<?>) returnValue;
+                List<Object> newList = new ArrayList<>();
+                if (CollectionUtils.isNotEmpty(oriList)) {
+                    for (Object object : oriList) {
+                        EnDecryptPojoUtils.decrypt(object);
+                        newList.add(object);
+                    }
+                    returnValue = newList;
+                }
+            } else if (returnValue instanceof Map) {
+                return returnValue;
+            } else {
+                EnDecryptPojoUtils.decrypt(returnValue);
+            }
         }
+        return returnValue;
     }
 
+/*
     private void enhanceEncryptByInsertOrUpdate(Invocation invocation) throws Throwable {
         Object parameter = invocation.getArgs()[1];
         Field[] fields = parameter.getClass().getDeclaredFields();
@@ -58,6 +84,73 @@ public class MapperInterceptor implements Interceptor {
                 field.set(parameter, new Date());
             }
         }
+        invocation.getArgs()[1] = parameter;
+    }
+ */
+
+    private void enhanceEncryptByInsertOrUpdate(Invocation invocation) {
+        Object parameter = invocation.getArgs()[1];
+        MappedStatement mappedStatement = (MappedStatement) invocation.getArgs()[0];
+        if (parameter instanceof String) {
+            if (isEncryptStr(mappedStatement)) {
+                parameter = "";//todo encrypt
+            }
+        } else if (parameter instanceof Map) {
+            return;
+        } else {
+            EnDecryptPojoUtils.encrypt(parameter);
+        }
+        invocation.getArgs()[1] = parameter;
+    }
+
+    /**
+     * 判断字符串是否需要加密
+     */
+    private boolean isEncryptStr(MappedStatement mappedStatement) {
+        boolean result = false;
+        try {
+            Method method = getMapperTargetMethod(mappedStatement);
+            assert method != null;
+            method.setAccessible(true);
+            Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+            if (parameterAnnotations.length > 0) {
+                for (Annotation[] parameterAnnotation : parameterAnnotations) {
+                    for (Annotation annotation : parameterAnnotation) {
+                        if (annotation instanceof EncryptField) {
+                            result = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (SecurityException e) {
+            e.printStackTrace();
+            result = false;
+        }
+        return result;
+    }
+
+    /**
+     * 获取mapper层接口方法
+     */
+    private Method getMapperTargetMethod(MappedStatement mappedStatement) {
+        Method method = null;
+        try {
+            String namespace = mappedStatement.getId();
+            String className = namespace.substring(0, namespace.lastIndexOf("."));
+            String methodName = namespace.substring(namespace.lastIndexOf(".") + 1);
+            Method[] ms = Class.forName(className).getMethods();
+            for (Method m : ms) {
+                if (m.getName().equals(methodName)) {
+                    method = m;
+                    break;
+                }
+            }
+        } catch (SecurityException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return method;
     }
 
     @Override

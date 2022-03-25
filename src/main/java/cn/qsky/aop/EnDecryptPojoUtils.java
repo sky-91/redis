@@ -19,7 +19,7 @@ public class EnDecryptPojoUtils {
                             field.setAccessible(true);
                             String fieldValue = (String) field.get(t);
                             if (StringUtils.isNotEmpty(fieldValue)) {
-                                field.set(t, "");//todo;
+                                field.set(t, fieldValue + "---");//todo encrypt
                             }
                             field.setAccessible(false);
                         }
@@ -44,7 +44,7 @@ public class EnDecryptPojoUtils {
                             field.setAccessible(true);
                             String fieldValue = (String) field.get(t);
                             if (StringUtils.isNotEmpty(fieldValue)) {
-                                field.set(t, "***" + fieldValue);//todo decrypt
+                                field.set(t, fieldValue.replaceAll("---", ""));//todo decrypt
                             }
                         }
                     }
@@ -61,7 +61,7 @@ public class EnDecryptPojoUtils {
     public static <T> Boolean isEncryptAndDecrypt(T t) {
         boolean reslut = false;
         if (t != null) {
-            Object object = t.getClass().getAnnotation(EnDecryptMapperType.class);
+            Object object = t.getClass().getAnnotation(EnDecryptMapperEntity.class);
             if (object != null) {
                 reslut = true;
             }

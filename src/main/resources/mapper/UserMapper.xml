@@ -26,7 +26,7 @@
 
   <insert id="insertOne" parameterType="cn.qsky.entity.User">
     insert into user(uid, user_name, age, register_time)
-    VALUES (#{uid}, #{user_name}, #{age}, #{register_time})
+    VALUES (#{uid}, #{userName}, #{age}, #{registerTime})
   </insert>
 
   <!--<insert id="insertBatch" parameterType="java.util.List">-->
@@ -38,15 +38,14 @@
 
   <insert id="insertBatch" parameterType="java.util.List">
     INSERT INTO user(uid, user_name, age, register_time)
-    SELECT A.* FROM (
-    <foreach collection="list" item="items" index="index" separator="union">
-      SELECT
+    VALUES
+    <foreach collection="list" item="items" index="index" separator=",">
+      (
       #{items.uid,jdbcType=VARCHAR},
-      #{items.user_name,jdbcType=VARCHAR},
+      #{items.userName,jdbcType=VARCHAR},
       #{items.age,jdbcType=INTEGER},
-      #{items.register_time,jdbcType=TIMESTAMP}
-      FROM TEMP
+      #{items.registerTime,jdbcType=TIMESTAMP}
+      )
     </foreach>
-    ) A
   </insert>
 </mapper>
